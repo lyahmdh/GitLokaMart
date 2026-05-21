@@ -1,12 +1,11 @@
-package com.example.lokamart
+package com.example.lokamart.data.remote
 
-import io.github.jan.supabase.BuildConfig
+import com.example.lokamart.BuildConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
 
-// Singleton Supabase client — dipakai di seluruh aplikasi
 object SupabaseClient {
 
     val client = createSupabaseClient(
