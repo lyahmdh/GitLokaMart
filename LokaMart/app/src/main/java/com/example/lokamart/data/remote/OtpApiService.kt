@@ -26,7 +26,7 @@ class OtpApiService {
         "https://gknjnodksyrhmaxzkdrk.supabase.co/functions/v1"
 
     private val apiKey =
-        "ISI_SUPABASE_ANON_KEY_KAMU"
+        "sb_publishable_TfuXNxBlc4JzfRpACPpnZQ_Mj2tyl5l"
 
     suspend fun sendOtp(email: String): Result<String> {
 

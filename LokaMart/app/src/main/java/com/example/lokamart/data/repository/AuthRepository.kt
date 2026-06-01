@@ -104,6 +104,18 @@ class AuthRepository {
         }
     }
 
+    suspend fun updateProfilePhone(userId: String, phone: String): Result<Unit> {
+        return try {
+            client.postgrest["profiles"]
+                .update({ set("phone", phone) }) {
+                    filter { eq("id", userId) }
+                }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // ── Mapping error Supabase ke pesan bahasa Indonesia ─────
     private fun mapAuthError(e: Exception): Exception {
         val msg = e.message?.lowercase() ?: ""
@@ -122,18 +134,3 @@ class AuthRepository {
         }
     }
 }
-
-//    suspend fun register(name: String, email: String, password: String): Result<UserInfo> {
-//        return try {
-//            client.auth.signUpWith(Email) {
-//                this.email = email
-//                this.password = password
-//                this.data = buildJsonObject { put("name", name) }
-//            }
-//            val user = client.auth.currentUserOrNull()
-//                ?: return Result.failure(Exception("Registrasi gagal, coba lagi"))
-//            Result.success(user)
-//        } catch (e: Exception) {
-//            Result.failure(mapAuthError(e))
-//        }
-//    }

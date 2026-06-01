@@ -34,10 +34,15 @@ class AuthViewModel : ViewModel() {
     }
 
     private fun checkSession() {
+        _uiState.update { it.copy(isLoading = true) } // ← tambah ini
         val user = repository.getCurrentUser()
         if (user != null) {
-            _uiState.update { it.copy(isLoggedIn = true) }
-            loadProfile(user.id)
+            viewModelScope.launch {
+                loadProfile(user.id)
+                _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+            }
+        } else {
+            _uiState.update { it.copy(isLoading = false, isLoggedIn = false) } // ← dan ini
         }
     }
 

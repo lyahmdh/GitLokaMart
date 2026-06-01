@@ -1,4 +1,4 @@
-package com.example.lokamart.ui.screen.components
+package com.example.lokamart.ui.components.BottomBar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.lokamart.ui.navigation.Screen
 import com.example.lokamart.ui.screen.auth.GreenDark
 
 // ── Bottom Nav Items ──────────────────────────────────────────
@@ -25,7 +26,7 @@ sealed class BottomNavItem(
     val icon: ImageVector
 ) {
     object Beranda : BottomNavItem("home", "Beranda", Icons.Outlined.Home)
-    object Favorit : BottomNavItem("wishlist", "Favorit", Icons.Outlined.FavoriteBorder)
+    object Favorit : BottomNavItem(Screen.Favorite.route,"Favorit", Icons.Outlined.FavoriteBorder)
     object Pesanan : BottomNavItem("orders", "Pesanan", Icons.Outlined.ListAlt)
     object Profil  : BottomNavItem("profile", "Profil", Icons.Outlined.Person)
 }
@@ -48,7 +49,7 @@ fun LokaMartBottomBar(
         tonalElevation = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .navigationBarsPadding()
     ) {
         bottomNavItems.forEach { item ->
             val selected = currentRoute == item.route
