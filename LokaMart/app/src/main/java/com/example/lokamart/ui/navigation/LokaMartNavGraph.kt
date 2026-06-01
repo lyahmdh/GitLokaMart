@@ -22,6 +22,9 @@ import com.example.lokamart.ui.screen.home.HomeScreen
 import com.example.lokamart.ui.screen.favorite.FavoriteScreen
 import com.example.lokamart.ui.screen.order.OrderHistoryScreen
 import com.example.lokamart.ui.screen.profile.ProfileScreen
+import com.example.lokamart.ui.screen.product.ManageProductScreen
+import com.example.lokamart.ui.screen.product.CreateProductScreen
+import com.example.lokamart.ui.screen.product.EditProductScreen
 
 
 @Composable
@@ -118,41 +121,29 @@ fun LokaMartNavGraph(
         }
 
         composable(Screen.Profile.route) {
-            ProfileScreen()
+            ProfileScreen(
+                onNavigateToManageProducts = {
+                    navController.navigate(Screen.ManageProducts.route)
+                }
+            )
         }
-//
-//        composable(Screen.ManageProducts.route) {
-//            ManageProductScreen(navController)
-//        }
-//
-//        composable(Screen.CreateProduct.route) {
-//            CreateProductScreen(navController)
-//        }
-//
-//        composable(
-//            route = Screen.ProductDetail.route
-//        ) { backStackEntry ->
-//
-//            val productId =
-//                backStackEntry.arguments?.getString("productId") ?: ""
-//
-//            ProductDetailScreen(
-//                productId = productId,
-//                navController = navController
-//            )
-//        }
-//
-//        composable(
-//            route = Screen.EditProduct.route
-//        ) { backStackEntry ->
-//
-//            val productId =
-//                backStackEntry.arguments?.getString("productId") ?: ""
-//
-//            EditProductScreen(
-//                productId = productId,
-//                navController = navController
-//            )
-//        }
+
+        composable(Screen.ManageProducts.route) {
+            ManageProductScreen(navController)
+        }
+
+        composable(Screen.CreateProduct.route) {
+            CreateProductScreen(navController)
+        }
+
+        composable(
+            route = Screen.EditProduct.route
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
+            EditProductScreen(
+                productId = productId,
+                navController = navController
+            )
+        }
     }
 }
