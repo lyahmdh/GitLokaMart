@@ -49,8 +49,8 @@ private val categories = listOf(
 
 // ── Sort Options ──────────────────────────────────────────────
 private val sortOptions = listOf(
-        "Produk Terbaru", "Harga Terendah", "Harga Tertinggi"
-    )
+    "Produk Terbaru", "Harga Terendah", "Harga Tertinggi"
+)
 
 // ─────────────────────────────────────────────────────────────
 // HomeScreen
@@ -59,7 +59,8 @@ private val sortOptions = listOf(
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onProductClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -250,7 +251,8 @@ fun HomeScreen(
                         ProductCard(
                             product = product,
                             isFavorite = product.id in uiState.favoriteIds,
-                            onToggleFavorite = { viewModel.toggleFavorite(product.id) }
+                            onToggleFavorite = { viewModel.toggleFavorite(product.id) },
+                            onClick = { onProductClick(product.id) }
                         )
                     }
                 }
@@ -346,11 +348,14 @@ private fun SortChip(
 private fun ProductCard(
     product: Product,
     isFavorite: Boolean,
-    onToggleFavorite: () -> Unit
+    onToggleFavorite: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {

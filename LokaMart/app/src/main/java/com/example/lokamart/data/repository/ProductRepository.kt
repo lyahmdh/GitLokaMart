@@ -43,13 +43,21 @@ class ProductRepository {
         }
     }
 
+    // ── FIX: tambah product_images(*) agar foto ikut ter-load ──
     suspend fun getProductById(
         productId: String
     ): Result<Product> {
         return runCatching {
             client
                 .from("products")
-                .select {
+                .select(
+                    columns = Columns.raw(
+                        """
+                        *,
+                        product_images(*)
+                        """.trimIndent()
+                    )
+                ) {
                     filter {
                         eq("id", productId)
                     }
