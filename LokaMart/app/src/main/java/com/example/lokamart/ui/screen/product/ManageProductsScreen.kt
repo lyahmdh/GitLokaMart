@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,7 +31,6 @@ import com.example.lokamart.ui.navigation.Screen
 import com.example.lokamart.ui.screen.auth.GreenDark
 import com.example.lokamart.ui.viewmodel.ManageProductsViewModel
 
-private val GreenLight = Color(0xFFE8F5E9)
 private val RedLight = Color(0xFFFFEBEE)
 private val RedDark = Color(0xFFD32F2F)
 private val OrangeDark = Color(0xFFE65100)
@@ -77,9 +77,7 @@ fun ManageProductScreen(
                         color = TextSecondary
                     )
                 }
-                IconButton(
-                    onClick = { navController.navigate(Screen.CreateProduct.route) }
-                ) {
+                IconButton(onClick = { navController.navigate(Screen.CreateProduct.route) }) {
                     Icon(
                         imageVector = Icons.Outlined.Add,
                         contentDescription = "Tambah Produk",
@@ -93,7 +91,7 @@ fun ManageProductScreen(
             OutlinedTextField(
                 value = uiState.searchQuery,
                 onValueChange = { viewModel.updateSearch(it) },
-                placeholder = { Text("Cari nama produk atau SKU...", color = TextSecondary, fontSize = 14.sp) },
+                placeholder = { Text("Cari nama produk...", color = TextSecondary, fontSize = 14.sp) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
@@ -174,12 +172,12 @@ fun ManageProductScreen(
                             items(displayList) { product ->
                                 ProductItem(
                                     product = product,
+                                    isArchived = product.isArchived,
                                     onEdit = {
                                         navController.navigate(Screen.EditProduct.createRoute(product.id))
                                     },
-                                    onArchive = {
-                                        viewModel.archiveProduct(product.id)
-                                    }
+                                    onArchive = { viewModel.archiveProduct(product.id) },
+                                    onUnarchive = { viewModel.unarchiveProduct(product.id) }
                                 )
                             }
                             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -194,27 +192,36 @@ fun ManageProductScreen(
 @Composable
 private fun ProductItem(
     product: Product,
+    isArchived: Boolean,
     onEdit: () -> Unit,
-    onArchive: () -> Unit
+    onArchive: () -> Unit,
+    onUnarchive: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Arsipkan Produk") },
-            text = { Text("Produk \"${product.name}\" akan diarsipkan. Lanjutkan?") },
+            title = { Text(if (isArchived) "Pulihkan Produk" else "Arsipkan Produk") },
+            text = {
+                Text(
+                    if (isArchived)
+                        "Produk \"${product.name}\" akan dipulihkan ke daftar aktif. Lanjutkan?"
+                    else
+                        "Produk \"${product.name}\" akan diarsipkan. Lanjutkan?"
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     showDialog = false
-                    onArchive()
+                    if (isArchived) onUnarchive() else onArchive()
                 }) {
-                    Text("Ya", color = RedDark)
+                    Text("Ya", color = if (isArchived) GreenDark else RedDark)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Batal", color = GreenDark)
+                    Text("Batal", color = TextSecondary)
                 }
             }
         )
@@ -285,19 +292,21 @@ private fun ProductItem(
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Edit",
-                        tint = GreenDark,
-                        modifier = Modifier.size(20.dp)
-                    )
+                if (!isArchived) {
+                    IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
+                        Icon(
+                            imageVector = Icons.Outlined.Edit,
+                            contentDescription = "Edit",
+                            tint = GreenDark,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
                 IconButton(onClick = { showDialog = true }, modifier = Modifier.size(36.dp)) {
                     Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = "Arsipkan",
-                        tint = RedDark,
+                        imageVector = if (isArchived) Icons.Outlined.Restore else Icons.Outlined.Delete,
+                        contentDescription = if (isArchived) "Pulihkan" else "Arsipkan",
+                        tint = if (isArchived) GreenDark else RedDark,
                         modifier = Modifier.size(20.dp)
                     )
                 }

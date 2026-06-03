@@ -50,7 +50,7 @@ fun EditProductScreen(
     var stok by remember(product) { mutableIntStateOf(product?.stock ?: 1) }
     var kategoriExpanded by remember { mutableStateOf(false) }
 
-    val kategoriList = listOf("Kerajinan", "Makanan & Minuman", "Tekstil", "Pertanian", "Lainnya")
+    val kategoriList = listOf("Kerajinan Tangan", "Fashion", "Peralatan Rumah Tangga", "Dekorasi Ruangan")
     val TextSecondary = Color(0xFF757575)
     val BorderColor = Color(0xFFE0E0E0)
 

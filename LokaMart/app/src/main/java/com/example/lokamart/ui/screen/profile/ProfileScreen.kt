@@ -21,7 +21,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.lokamart.ui.screen.auth.GreenDark
 import com.example.lokamart.ui.viewmodel.ProfileViewModel
 
-private val GreenLight = Color(0xFFE8F5E9)
 private val TextSecondary = Color(0xFF757575)
 
 @Composable
@@ -32,14 +31,8 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Trigger logout navigation
-    LaunchedEffect(uiState.logoutSuccess) {
-        if (uiState.logoutSuccess) onLogout()
-    }
-
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // ── Header ────────────────────────────────────────────
         Surface(color = Color.White, shadowElevation = 2.dp) {
             Row(
                 modifier = Modifier
@@ -84,7 +77,6 @@ fun ProfileScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
 
-                    // ── Profile Card ──────────────────────────
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -97,7 +89,6 @@ fun ProfileScreen(
                                 .padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Avatar
                             Box(
                                 modifier = Modifier
                                     .size(80.dp)
@@ -115,7 +106,6 @@ fun ProfileScreen(
 
                             Spacer(Modifier.height(12.dp))
 
-                            // Name
                             Text(
                                 text = uiState.profile?.name ?: "-",
                                 fontSize = 18.sp,
@@ -124,11 +114,10 @@ fun ProfileScreen(
 
                             Spacer(Modifier.height(8.dp))
 
-                            // Email row
                             EditableInfoRow(
                                 icon = Icons.Outlined.Email,
                                 value = uiState.profile?.email ?: "-",
-                                isEditing = false, // email tidak bisa diedit
+                                isEditing = false,
                                 editValue = "",
                                 onEditClick = null,
                                 onValueChange = {},
@@ -138,11 +127,9 @@ fun ProfileScreen(
 
                             Spacer(Modifier.height(4.dp))
 
-                            // Phone row
                             EditableInfoRow(
                                 icon = Icons.Outlined.Phone,
-                                value = uiState.profile?.phone
-                                    ?.ifBlank { "Belum diisi" } ?: "Belum diisi",
+                                value = uiState.profile?.phone?.ifBlank { "Belum diisi" } ?: "Belum diisi",
                                 isEditing = uiState.isEditingPhone,
                                 editValue = uiState.editPhoneValue,
                                 onEditClick = viewModel::startEditPhone,
@@ -152,7 +139,6 @@ fun ProfileScreen(
                                 isSaving = uiState.isSaving
                             )
 
-                            // Edit name dialog
                             if (uiState.isEditingName) {
                                 EditNameDialog(
                                     value = uiState.editNameValue,
@@ -165,7 +151,6 @@ fun ProfileScreen(
                         }
                     }
 
-                    // ── Kelola Produk ─────────────────────────
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -215,13 +200,12 @@ fun ProfileScreen(
                         }
                     }
 
-                    // ── Keluar Akun ───────────────────────────
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(2.dp),
-                        onClick = viewModel::logout
+                        onClick = onLogout
                     ) {
                         Row(
                             modifier = Modifier
@@ -251,9 +235,6 @@ fun ProfileScreen(
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// EditableInfoRow — baris info yang bisa diedit inline
-// ─────────────────────────────────────────────────────────────
 @Composable
 private fun EditableInfoRow(
     icon: ImageVector,
@@ -320,9 +301,6 @@ private fun EditableInfoRow(
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// EditNameDialog
-// ─────────────────────────────────────────────────────────────
 @Composable
 private fun EditNameDialog(
     value: String,

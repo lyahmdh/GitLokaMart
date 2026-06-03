@@ -1,5 +1,6 @@
 package com.example.lokamart.ui.viewmodel
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
+import java.time.Instant
 
 data class ManageProductsUiState(
     val isLoading: Boolean = false,
@@ -65,6 +67,7 @@ class ManageProductsViewModel : ViewModel() {
     }
 
     fun createProduct(
+        context: Context,
         name: String,
         category: String,
         price: Int,
@@ -73,7 +76,8 @@ class ManageProductsViewModel : ViewModel() {
         imageUri: Uri? = null
     ) {
         val user = authRepository.getCurrentUser() ?: return
-        val now = System.currentTimeMillis().toString()
+        val now = Instant.now().toString()
+
         val newProduct = Product(
             id = UUID.randomUUID().toString(),
             userId = user.id,
@@ -84,12 +88,43 @@ class ManageProductsViewModel : ViewModel() {
             stock = stock,
             createdAt = now
         )
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
             repository.createProduct(newProduct)
-                .onSuccess {
-                    _uiState.update { it.copy(isLoading = false, createSuccess = true) }
-                    loadMyProducts()
+                .onSuccess { createdProduct ->
+                    if (imageUri != null) {
+                        try {
+                            val inputStream = context.contentResolver.openInputStream(imageUri)
+                            val bytes = inputStream?.readBytes()
+                            inputStream?.close()
+
+                            if (bytes != null) {
+                                repository.uploadProductImage(bytes)
+                                    .onSuccess { imageUrl ->
+                                        repository.insertProductImage(createdProduct.id, imageUrl)
+                                            .onSuccess {
+                                                _uiState.update { it.copy(isLoading = false, createSuccess = true) }
+                                                loadMyProducts()
+                                            }
+                                            .onFailure { e ->
+                                                _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                                            }
+                                    }
+                                    .onFailure { e ->
+                                        _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                                    }
+                            } else {
+                                _uiState.update { it.copy(isLoading = false, errorMessage = "File error") }
+                            }
+                        } catch (e: Exception) {
+                            _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                        }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, createSuccess = true) }
+                        loadMyProducts()
+                    }
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
@@ -114,6 +149,16 @@ class ManageProductsViewModel : ViewModel() {
     fun archiveProduct(productId: String) {
         viewModelScope.launch {
             repository.archiveProduct(productId)
+                .onSuccess { loadMyProducts() }
+                .onFailure { e ->
+                    _uiState.update { it.copy(errorMessage = e.message) }
+                }
+        }
+    }
+
+    fun unarchiveProduct(productId: String) {
+        viewModelScope.launch {
+            repository.unarchiveProduct(productId)
                 .onSuccess { loadMyProducts() }
                 .onFailure { e ->
                     _uiState.update { it.copy(errorMessage = e.message) }

@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,7 @@ fun CreateProductScreen(
     viewModel: ManageProductsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     var namaProduct by remember { mutableStateOf("") }
     var kategori by remember { mutableStateOf("") }
@@ -53,10 +55,10 @@ fun CreateProductScreen(
     var kategoriExpanded by remember { mutableStateOf(false) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    val kategoriList = listOf("Kerajinan", "Makanan & Minuman", "Tekstil", "Pertanian", "Lainnya")
+    val kategoriList = listOf("Kerajinan Tangan", "Fashion", "Peralatan Rumah Tangga", "Dekorasi Ruangan")
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         selectedImageUri = uri
     }
@@ -104,7 +106,7 @@ fun CreateProductScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .border(1.5.dp, BorderColor, RoundedCornerShape(12.dp))
                     .background(Color(0xFFF9F9F9))
-                    .clickable { imagePickerLauncher.launch("image/*") },
+                    .clickable { imagePickerLauncher.launch(arrayOf("image/*")) },
                 contentAlignment = Alignment.Center
             ) {
                 if (selectedImageUri != null) {
@@ -146,7 +148,7 @@ fun CreateProductScreen(
                         .clip(RoundedCornerShape(8.dp))
                         .border(1.dp, if (selectedImageUri != null) GreenDark else BorderColor, RoundedCornerShape(8.dp))
                         .background(Color(0xFFF9F9F9))
-                        .clickable { imagePickerLauncher.launch("image/*") },
+                        .clickable { imagePickerLauncher.launch(arrayOf("image/*")) },
                     contentAlignment = Alignment.Center
                 ) {
                     if (selectedImageUri != null) {
@@ -310,7 +312,6 @@ fun CreateProductScreen(
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.size(40.dp),
                     contentPadding = PaddingValues(0.dp),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = GreenDark)
                 ) {
                     Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -359,6 +360,7 @@ fun CreateProductScreen(
                 Button(
                     onClick = {
                         viewModel.createProduct(
+                            context = context,
                             name = namaProduct,
                             category = kategori,
                             price = harga.toIntOrNull() ?: 0,
