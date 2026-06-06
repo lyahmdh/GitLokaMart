@@ -20,6 +20,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.lokamart.ui.screen.auth.GreenDark
 import com.example.lokamart.ui.viewmodel.ProfileViewModel
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 private val TextSecondary = Color(0xFF757575)
 
@@ -136,6 +141,19 @@ fun ProfileScreen(
                                 onValueChange = viewModel::onPhoneChange,
                                 onSave = viewModel::savePhone,
                                 onCancel = viewModel::cancelEditPhone,
+                                isSaving = uiState.isSaving
+                            )
+
+                            Spacer(Modifier.height(4.dp))
+
+                            LocationDropdownRow(
+                                value = uiState.profile?.location?.ifBlank { "Belum diisi" } ?: "Belum diisi",
+                                isEditing = uiState.isEditingLocation,
+                                editValue = uiState.editLocationValue,
+                                onEditClick = viewModel::startEditLocation,
+                                onValueChange = viewModel::onLocationChange,
+                                onSave = viewModel::saveLocation,
+                                onCancel = viewModel::cancelEditLocation,
                                 isSaving = uiState.isSaving
                             )
 
@@ -338,4 +356,131 @@ private fun EditNameDialog(
             TextButton(onClick = onDismiss) { Text("Batal", color = TextSecondary) }
         }
     )
+}
+
+// Taruh di luar composable ProfileScreen, level file
+private val indonesiaProvinces = listOf(
+    "Aceh", "Bali", "Banten", "Bengkulu", "DI Yogyakarta", "DKI Jakarta",
+    "Gorontalo", "Jambi", "Jawa Barat", "Jawa Tengah", "Jawa Timur",
+    "Kalimantan Barat", "Kalimantan Selatan", "Kalimantan Tengah",
+    "Kalimantan Timur", "Kalimantan Utara", "Kepulauan Bangka Belitung",
+    "Kepulauan Riau", "Lampung", "Maluku", "Maluku Utara",
+    "Nusa Tenggara Barat", "Nusa Tenggara Timur", "Papua", "Papua Barat",
+    "Papua Barat Daya", "Papua Pegunungan", "Papua Selatan", "Papua Tengah",
+    "Riau", "Sulawesi Barat", "Sulawesi Selatan", "Sulawesi Tengah",
+    "Sulawesi Tenggara", "Sulawesi Utara", "Sumatera Barat",
+    "Sumatera Selatan", "Sumatera Utara"
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LocationDropdownRow(
+    value: String,
+    isEditing: Boolean,
+    editValue: String,
+    onEditClick: () -> Unit,
+    onValueChange: (String) -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
+    isSaving: Boolean = false
+) {
+    val filtered = remember(editValue) {
+        if (editValue.isBlank()) indonesiaProvinces
+        else indonesiaProvinces.filter {
+            it.contains(editValue, ignoreCase = true)
+        }
+    }
+    var expanded by remember { mutableStateOf(false) }
+
+    // Buka dropdown otomatis saat mulai mengetik
+    LaunchedEffect(editValue, isEditing) {
+        expanded = isEditing && editValue.isNotBlank() && filtered.isNotEmpty()
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        if (isEditing) {
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+                modifier = Modifier.weight(1f)
+            ) {
+                OutlinedTextField(
+                    value = editValue,
+                    onValueChange = {
+                        onValueChange(it)
+                        expanded = true
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    singleLine = true,
+                    placeholder = { Text("Cari provinsi...", fontSize = 13.sp) },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GreenDark,
+                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                    ),
+                    trailingIcon = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (isSaving) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    color = GreenDark,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                IconButton(onClick = onSave) {
+                                    Icon(Icons.Outlined.Check, null, tint = GreenDark)
+                                }
+                                IconButton(onClick = onCancel) {
+                                    Icon(Icons.Outlined.Close, null, tint = Color.Gray)
+                                }
+                            }
+                        }
+                    }
+                )
+
+                if (filtered.isNotEmpty()) {
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        filtered.forEach { province ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(province, fontSize = 14.sp)
+                                },
+                                onClick = {
+                                    onValueChange(province)
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            Icon(
+                Icons.Outlined.LocationOn,
+                contentDescription = null,
+                tint = TextSecondary,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(value, fontSize = 14.sp, color = TextSecondary)
+            Spacer(Modifier.width(6.dp))
+            IconButton(onClick = onEditClick, modifier = Modifier.size(20.dp)) {
+                Icon(
+                    Icons.Outlined.Edit,
+                    contentDescription = "Edit Lokasi",
+                    tint = GreenDark,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+        }
+    }
 }

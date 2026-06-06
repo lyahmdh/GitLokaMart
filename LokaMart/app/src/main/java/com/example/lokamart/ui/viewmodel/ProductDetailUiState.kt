@@ -1,10 +1,13 @@
 package com.example.lokamart.ui.viewmodel
 
 import com.example.lokamart.data.model.Product
+import com.example.lokamart.data.model.Profile
+import io.github.jan.supabase.gotrue.Auth
 
 data class ProductDetailUiState(
     val isLoading: Boolean = false,
     val product: Product? = null,
+    val sellerProfile: Profile? = null,
     val relatedProducts: List<Product> = emptyList(),
     val isFavorite: Boolean = false,
     val errorMessage: String? = null,

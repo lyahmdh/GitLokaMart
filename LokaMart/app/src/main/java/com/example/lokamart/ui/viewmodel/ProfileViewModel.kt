@@ -16,8 +16,10 @@ data class ProfileUiState(
     val errorMessage: String? = null,
     val isEditingName: Boolean = false,
     val isEditingPhone: Boolean = false,
+    val isEditingLocation: Boolean = false,
     val editNameValue: String = "",
     val editPhoneValue: String = "",
+    val editLocationValue: String = "",
     val isSaving: Boolean = false
 )
 
@@ -108,4 +110,39 @@ class ProfileViewModel : ViewModel() {
     fun cancelEditPhone() = _uiState.update { it.copy(isEditingPhone = false) }
 
     fun clearError() = _uiState.update { it.copy(errorMessage = null) }
+    fun startEditLocation() {
+        _uiState.update {
+            it.copy(
+                isEditingLocation = true,
+                editLocationValue = it.profile?.location ?: ""
+            )
+        }
+    }
+
+    fun onLocationChange(value: String) =
+        _uiState.update { it.copy(editLocationValue = value) }
+
+    fun saveLocation() {
+        val user = repository.getCurrentUser() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true) }
+            repository.updateProfileLocation(user.id, _uiState.value.editLocationValue.trim()).fold(
+                onSuccess = {
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            isEditingLocation = false,
+                            profile = it.profile?.copy(location = it.editLocationValue.trim())
+                        )
+                    }
+                },
+                onFailure = { e ->
+                    _uiState.update { it.copy(isSaving = false, errorMessage = e.message) }
+                }
+            )
+        }
+    }
+
+    fun cancelEditLocation() =
+        _uiState.update { it.copy(isEditingLocation = false, editLocationValue = "") }
 }

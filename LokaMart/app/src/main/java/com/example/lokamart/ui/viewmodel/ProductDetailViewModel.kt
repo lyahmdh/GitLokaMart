@@ -35,6 +35,7 @@ class ProductDetailViewModel : ViewModel() {
                     _uiState.update { it.copy(isLoading = false, product = product) }
                     loadRelatedProducts(product.category, productId)
                     checkFavorite(productId)
+                    loadSellerProfile(product.userId)
                 }
                 .onFailure { e ->
                     Log.e("ProductDetailVM", "Error loading product: ${e.message}", e)
@@ -76,7 +77,17 @@ class ProductDetailViewModel : ViewModel() {
                 }
         }
     }
-
+    private fun loadSellerProfile(userId: String) {
+        viewModelScope.launch {
+            authRepository.getProfile(userId)
+                .onSuccess { profile ->
+                    _uiState.update { it.copy(sellerProfile = profile) }
+                }
+                .onFailure { e ->
+                    Log.e("ProductDetailVM", "Error loading seller: ${e.message}", e)
+                }
+        }
+    }
     private fun checkFavorite(productId: String) {
         val user = authRepository.getCurrentUser() ?: return
         viewModelScope.launch {

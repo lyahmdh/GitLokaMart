@@ -306,8 +306,10 @@ fun ProductDetailScreen(
                         }
                     }
 
-                    // ── Kartu Penjual ─────────────────────────────────
+                    // ── Kartu Penjual ─────────────────────────────────────────
                     item {
+                        val seller = uiState.sellerProfile
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -338,9 +340,10 @@ fun ProductDetailScreen(
                                         modifier = Modifier.size(24.dp)
                                     )
                                 }
+
                                 Column {
                                     Text(
-                                        text = "Penjual",
+                                        text = seller?.name?.ifBlank { "Penjual" } ?: "Penjual",
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = TextPrimary
@@ -356,7 +359,7 @@ fun ProductDetailScreen(
                                             modifier = Modifier.size(12.dp)
                                         )
                                         Text(
-                                            text = "Indonesia",
+                                            text = seller?.location?.ifBlank { "Indonesia" } ?: "Indonesia",
                                             fontSize = 12.sp,
                                             color = TextSecondary
                                         )
