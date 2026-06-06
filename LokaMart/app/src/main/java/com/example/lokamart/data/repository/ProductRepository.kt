@@ -34,12 +34,24 @@ class ProductRepository {
         }
     }
 
-    suspend fun getProductById(productId: String): Result<Product> {
+    // ── FIX: tambah product_images(*) agar foto ikut ter-load ──
+    suspend fun getProductById(
+        productId: String
+    ): Result<Product> {
         return runCatching {
             client
                 .from("products")
-                .select {
-                    filter { eq("id", productId) }
+                .select(
+                    columns = Columns.raw(
+                        """
+                        *,
+                        product_images(*)
+                        """.trimIndent()
+                    )
+                ) {
+                    filter {
+                        eq("id", productId)
+                    }
                 }
                 .decodeSingle<Product>()
         }
