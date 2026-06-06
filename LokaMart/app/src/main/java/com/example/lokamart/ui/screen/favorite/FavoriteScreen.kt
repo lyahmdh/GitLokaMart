@@ -125,7 +125,12 @@ fun FavoriteScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(uiState.favoriteProducts) { product ->
-                        FavoriteProductItem(product = product)
+                        FavoriteProductItem(
+                            product = product,
+                            onUnfavorite = {
+                                viewModel.removeFavorite(it.id)
+                            }
+                        )
                     }
                 }
             }
@@ -171,7 +176,10 @@ private fun FavoriteCategoryChip(
 }
 
 @Composable
-private fun FavoriteProductItem(product: Product) {
+private fun FavoriteProductItem(
+    product: Product,
+    onUnfavorite: (Product) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -221,12 +229,17 @@ private fun FavoriteProductItem(product: Product) {
                 )
             }
 
-            Icon(
-                imageVector = Icons.Filled.Favorite,
-                contentDescription = "Favorit",
-                tint = Color.Black,
-                modifier = Modifier.size(22.dp)
-            )
+            IconButton(
+                onClick = {
+                    onUnfavorite(product)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = "Hapus Favorit",
+                    tint = Color.Red
+                )
+            }
         }
     }
 }

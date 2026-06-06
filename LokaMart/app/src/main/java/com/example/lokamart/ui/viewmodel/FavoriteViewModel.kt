@@ -88,4 +88,21 @@ class FavoriteViewModel : ViewModel() {
         return if (category == "Semua") products
         else products.filter { it.category == category }
     }
+
+    fun removeFavorite(productId: String) {
+        val user = authRepository.getCurrentUser() ?: return
+
+        viewModelScope.launch {
+            favoriteRepository.removeFavorite(
+                userId = user.id,
+                productId = productId
+            ).onSuccess {
+                loadFavoriteProducts()
+            }.onFailure { e ->
+                _uiState.update {
+                    it.copy(errorMessage = e.message)
+                }
+            }
+        }
+    }
 }
