@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.lokamart.data.model.Product
 import com.example.lokamart.data.remote.SupabaseClient.client
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.storage.storage
 import kotlinx.serialization.json.buildJsonObject
@@ -16,7 +15,7 @@ class ProductRepository {
     suspend fun getProducts(): Result<List<Product>> {
         return try {
             val products = client
-                .postgrest["products"]
+                .from("products")
                 .select(
                     columns = Columns.raw(
                         """
@@ -94,15 +93,40 @@ class ProductRepository {
         }
     }
 
-    suspend fun insertProductImage(productId: String, imageUrl: String): Result<Unit> {
+    suspend fun insertProductImage(productId: String, imageUrl: String, isThumbnail: Boolean = false, sortOrder: Int = 0): Result<Unit> {
         return runCatching {
             client.from("product_images").insert(
                 buildJsonObject {
                     put("product_id", productId)
                     put("image_url", imageUrl)
-                    put("is_thumbnail", true)
+                    put("is_thumbnail", isThumbnail)
+                    put("sort_order", sortOrder)
                 }
             )
+        }
+    }
+
+    suspend fun deleteProductImageById(imageId: String): Result<Unit> {
+        return runCatching {
+            client.from("product_images").delete {
+                filter { eq("id", imageId) }
+            }
+        }
+    }
+
+    suspend fun deleteAllProductImages(productId: String): Result<Unit> {
+        return runCatching {
+            client.from("product_images").delete {
+                filter { eq("product_id", productId) }
+            }
+        }
+    }
+
+    suspend fun deleteImageFromStorage(imageUrl: String): Result<Unit> {
+        return runCatching {
+            val bucket = client.storage["product-images"]
+            val fileName = imageUrl.substringAfterLast("/")
+            bucket.delete(listOf(fileName))
         }
     }
 
@@ -149,6 +173,13 @@ class ProductRepository {
                 ) {
                     filter { eq("id", productId) }
                 }
+        }
+    }
+    suspend fun deleteProduct(productId: String): Result<Unit> {
+        return runCatching {
+            client.from("products").delete {
+                filter { eq("id", productId) }
+            }
         }
     }
 }

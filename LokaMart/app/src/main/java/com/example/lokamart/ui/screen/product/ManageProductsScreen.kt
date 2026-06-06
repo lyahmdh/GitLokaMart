@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Restore
@@ -192,7 +193,8 @@ fun ManageProductScreen(
                                         navController.navigate(Screen.EditProduct.createRoute(product.id))
                                     },
                                     onArchive = { viewModel.archiveProduct(product.id) },
-                                    onUnarchive = { viewModel.unarchiveProduct(product.id) }
+                                    onUnarchive = { viewModel.unarchiveProduct(product.id) },
+                                    onDelete = { viewModel.deleteProduct(product.id) }
                                 )
                             }
                             item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -210,13 +212,16 @@ private fun ProductItem(
     isArchived: Boolean,
     onEdit: () -> Unit,
     onArchive: () -> Unit,
-    onUnarchive: () -> Unit
+    onUnarchive: () -> Unit,
+    onDelete: () -> Unit
 ) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showArchiveDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
-    if (showDialog) {
+    // Dialog arsip / pulihkan
+    if (showArchiveDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { showArchiveDialog = false },
             title = { Text(if (isArchived) "Pulihkan Produk" else "Arsipkan Produk") },
             text = {
                 Text(
@@ -228,14 +233,38 @@ private fun ProductItem(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    showDialog = false
+                    showArchiveDialog = false
                     if (isArchived) onUnarchive() else onArchive()
                 }) {
-                    Text("Ya", color = if (isArchived) GreenDark else RedDark)
+                    Text("Ya", color = GreenDark)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = { showArchiveDialog = false }) {
+                    Text("Batal", color = TextSecondary)
+                }
+            }
+        )
+    }
+
+    // Dialog hapus permanen
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Hapus Produk") },
+            text = {
+                Text("Produk \"${product.name}\" akan dihapus permanen dan tidak bisa dikembalikan. Lanjutkan?")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    onDelete()
+                }) {
+                    Text("Hapus", color = RedDark)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
                     Text("Batal", color = TextSecondary)
                 }
             }
@@ -308,6 +337,7 @@ private fun ProductItem(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (!isArchived) {
+                    // Tombol edit
                     IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
                         Icon(
                             imageVector = Icons.Outlined.Edit,
@@ -316,12 +346,32 @@ private fun ProductItem(
                             modifier = Modifier.size(20.dp)
                         )
                     }
+                    // Tombol arsip
+                    IconButton(onClick = { showArchiveDialog = true }, modifier = Modifier.size(36.dp)) {
+                        Icon(
+                            imageVector = Icons.Outlined.Archive,
+                            contentDescription = "Arsipkan",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                } else {
+                    // Tombol pulihkan
+                    IconButton(onClick = { showArchiveDialog = true }, modifier = Modifier.size(36.dp)) {
+                        Icon(
+                            imageVector = Icons.Outlined.Restore,
+                            contentDescription = "Pulihkan",
+                            tint = GreenDark,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
-                IconButton(onClick = { showDialog = true }, modifier = Modifier.size(36.dp)) {
+                // Tombol hapus permanen (selalu ada)
+                IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.size(36.dp)) {
                     Icon(
-                        imageVector = if (isArchived) Icons.Outlined.Restore else Icons.Outlined.Delete,
-                        contentDescription = if (isArchived) "Pulihkan" else "Arsipkan",
-                        tint = if (isArchived) GreenDark else RedDark,
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = "Hapus",
+                        tint = RedDark,
                         modifier = Modifier.size(20.dp)
                     )
                 }

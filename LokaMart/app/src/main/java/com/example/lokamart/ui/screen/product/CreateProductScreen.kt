@@ -8,11 +8,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.*
@@ -38,6 +42,8 @@ import com.example.lokamart.ui.viewmodel.ManageProductsViewModel
 private val TextSecondary = Color(0xFF757575)
 private val BorderColor = Color(0xFFE0E0E0)
 
+private const val MAX_IMAGES = 5
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateProductScreen(
@@ -53,14 +59,21 @@ fun CreateProductScreen(
     var deskripsi by remember { mutableStateOf("") }
     var stok by remember { mutableStateOf(1) }
     var kategoriExpanded by remember { mutableStateOf(false) }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Multi-image: simpan list Uri
+    var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
     val kategoriList = listOf("Kerajinan Tangan", "Fashion", "Peralatan Rumah Tangga", "Dekorasi Ruangan")
 
+    // Launcher multi-dokumen
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        selectedImageUri = uri
+        contract = ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            val remaining = MAX_IMAGES - selectedImageUris.size
+            val toAdd = uris.take(remaining)
+            selectedImageUris = selectedImageUris + toAdd
+        }
     }
 
     LaunchedEffect(uiState.createSuccess) {
@@ -97,13 +110,14 @@ fun CreateProductScreen(
                 color = GreenDark
             )
             Text(
-                text = "Unggah foto terbaik produk Anda untuk menarik pembeli.",
+                text = "Unggah hingga $MAX_IMAGES foto produk Anda. Foto pertama akan jadi thumbnail.",
                 fontSize = 12.sp,
                 color = TextSecondary
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Preview gambar pertama (large)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -111,16 +125,31 @@ fun CreateProductScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .border(1.5.dp, BorderColor, RoundedCornerShape(12.dp))
                     .background(Color(0xFFF9F9F9))
-                    .clickable { imagePickerLauncher.launch(arrayOf("image/*")) },
+                    .clickable {
+                        if (selectedImageUris.size < MAX_IMAGES) {
+                            imagePickerLauncher.launch(arrayOf("image/*"))
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                if (selectedImageUri != null) {
+                if (selectedImageUris.isNotEmpty()) {
                     AsyncImage(
-                        model = selectedImageUri,
-                        contentDescription = "Foto produk",
+                        model = selectedImageUris.first(),
+                        contentDescription = "Foto utama produk",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
+                    // Label "Thumbnail"
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(GreenDark.copy(alpha = 0.85f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text("Thumbnail", fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
+                    }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
@@ -139,57 +168,91 @@ fun CreateProductScreen(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("Tambah Foto", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = GreenDark)
-                        Text("Maks. 5MB (JPG, PNG)", fontSize = 12.sp, color = TextSecondary)
+                        Text("Maks. $MAX_IMAGES foto (JPG, PNG)", fontSize = 12.sp, color = TextSecondary)
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, if (selectedImageUri != null) GreenDark else BorderColor, RoundedCornerShape(8.dp))
-                        .background(Color(0xFFF9F9F9))
-                        .clickable { imagePickerLauncher.launch(arrayOf("image/*")) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (selectedImageUri != null) {
+            // Row thumbnail kecil
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Slot gambar yang sudah dipilih
+                itemsIndexed(selectedImageUris) { index, uri ->
+                    Box(
+                        modifier = Modifier.size(64.dp)
+                    ) {
                         AsyncImage(
-                            model = selectedImageUri,
+                            model = uri,
                             contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(8.dp))
+                                .border(1.5.dp, GreenDark, RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Crop
                         )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.Image,
-                            contentDescription = null,
-                            tint = BorderColor,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        // Tombol hapus (X) di pojok kanan atas
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .align(Alignment.TopEnd)
+                                .clip(CircleShape)
+                                .background(Color(0xFFD32F2F))
+                                .clickable {
+                                    selectedImageUris = selectedImageUris.toMutableList().also {
+                                        it.removeAt(index)
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Hapus gambar",
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
                     }
                 }
-                repeat(3) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
-                            .background(Color(0xFFF9F9F9)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Image,
-                            contentDescription = null,
-                            tint = BorderColor,
-                            modifier = Modifier.size(24.dp)
-                        )
+
+                // Slot tambah gambar (muncul kalau belum maks)
+                if (selectedImageUris.size < MAX_IMAGES) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
+                                .background(Color(0xFFF9F9F9))
+                                .clickable { imagePickerLauncher.launch(arrayOf("image/*")) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Image,
+                                    contentDescription = "Tambah",
+                                    tint = GreenDark,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Text(
+                                    "+${MAX_IMAGES - selectedImageUris.size}",
+                                    fontSize = 10.sp,
+                                    color = GreenDark,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
                     }
                 }
             }
+
+            // Info jumlah gambar
+            Text(
+                text = "${selectedImageUris.size}/$MAX_IMAGES foto dipilih",
+                fontSize = 11.sp,
+                color = if (selectedImageUris.size >= MAX_IMAGES) GreenDark else TextSecondary,
+                modifier = Modifier.padding(top = 4.dp)
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -371,7 +434,7 @@ fun CreateProductScreen(
                             price = harga.toIntOrNull() ?: 0,
                             description = deskripsi,
                             stock = stok,
-                            imageUri = selectedImageUri
+                            imageUris = selectedImageUris   // <-- sekarang list Uri
                         )
                     },
                     enabled = !uiState.isLoading && namaProduct.isNotBlank() && kategori.isNotBlank() && harga.isNotBlank(),
