@@ -138,21 +138,14 @@ fun LokaMartNavGraph(
         }
 
         composable(Screen.CreateProduct.route) {
-            val manageVM: ManageProductsViewModel = viewModel(
-                viewModelStoreOwner = navController.getBackStackEntry(Screen.ManageProducts.route)
-            )
-            CreateProductScreen(navController = navController, viewModel = manageVM)
+            CreateProductScreen(navController = navController)
         }
 
         composable(route = Screen.EditProduct.route) { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
-            val manageVM: ManageProductsViewModel = viewModel(
-                viewModelStoreOwner = navController.getBackStackEntry(Screen.ManageProducts.route)
-            )
             EditProductScreen(
                 productId = productId,
-                navController = navController,
-                viewModel = manageVM
+                navController = navController
             )
         }
 

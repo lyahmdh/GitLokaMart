@@ -70,7 +70,12 @@ fun CreateProductScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+            .statusBarsPadding()
+    ){
 
         Surface(color = Color.White, shadowElevation = 2.dp) {
             LokaMartHeaderWithBack(onBack = { navController.navigateUp() })

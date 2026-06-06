@@ -23,7 +23,7 @@ data class Product(
     val isArchived: Boolean = false,
 
     @SerialName("created_at")
-    val createdAt: String,
+    val createdAt: String?,
 
     @SerialName("updated_at")
     val updatedAt: String? = null,

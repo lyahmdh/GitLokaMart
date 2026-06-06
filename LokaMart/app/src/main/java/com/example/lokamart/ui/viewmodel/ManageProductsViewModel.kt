@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
-import java.time.Instant
 
 data class ManageProductsUiState(
     val isLoading: Boolean = false,
@@ -76,7 +75,13 @@ class ManageProductsViewModel : ViewModel() {
         imageUri: Uri? = null
     ) {
         val user = authRepository.getCurrentUser() ?: return
-        val now = Instant.now().toString()
+        val now = java.text.SimpleDateFormat(
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            java.util.Locale.getDefault()
+        ).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }.format(java.util.Date())
+
 
         val newProduct = Product(
             id = UUID.randomUUID().toString(),

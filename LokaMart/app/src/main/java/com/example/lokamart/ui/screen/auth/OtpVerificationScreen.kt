@@ -103,24 +103,7 @@ fun OtpVerificationScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // LOGO
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    )
-                ) {
-
-                    Box(
-                        modifier = Modifier.size(72.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-
-                        Text(
-                            text = "LOGO",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
+                LokaMartLogo(size = 72.dp)
 
                 Spacer(modifier = Modifier.height(20.dp))
 

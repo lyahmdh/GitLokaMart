@@ -38,7 +38,7 @@ private val TextPrimary   = Color(0xFF1A1A1A)
 private val TextSecondary = Color(0xFF757575)
 
 private val categories = listOf(
-    "Semua", "Fashion", "Kerajinan Tangan", "Peralatan Rumah Tangga"
+    "Semua", "Fashion", "Kerajinan Tangan", "Peralatan Rumah Tangga", "Dekorasi Ruangan"
 )
 
 @Composable

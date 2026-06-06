@@ -40,6 +40,7 @@ import com.example.lokamart.ui.screen.auth.GreenDark
 import com.example.lokamart.ui.viewmodel.ProductDetailViewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.outlined.CheckCircle
 
 // ── Local colors ─────────────────────────────────────────────
 private val GreenChip     = Color(0xFFDCEFDC)
@@ -69,11 +70,11 @@ fun ProductDetailScreen(
     var quantity by remember {
         mutableIntStateOf(0)
     }
+    var showQuantityError by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
     LaunchedEffect(uiState.orderSuccess) {
         if (uiState.orderSuccess) {
-            snackbarHostState.showSnackbar(
-                "Barang berhasil ditambahkan ke pemesanan"
-            )
+            showSuccessDialog = true
             viewModel.clearOrderSuccess()
         }
     }
@@ -118,6 +119,44 @@ fun ProductDetailScreen(
                     mutableStateOf(
                         sortedImages.firstOrNull { it.isThumbnail }?.imageUrl
                             ?: sortedImages.firstOrNull()?.imageUrl
+                    )
+                }
+
+                if (showSuccessDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showSuccessDialog = false },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.CheckCircle,
+                                contentDescription = null,
+                                tint = GreenDark,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        },
+                        title = {
+                            Text(
+                                text = "Pesanan Berhasil!",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = "Barang berhasil ditambahkan ke pesanan kamu.",
+                                fontSize = 14.sp,
+                                color = Color(0xFF757575)
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = { showSuccessDialog = false },
+                                colors = ButtonDefaults.buttonColors(containerColor = GreenDark),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("Oke")
+                            }
+                        },
+                        shape = RoundedCornerShape(16.dp)
                     )
                 }
 
@@ -371,7 +410,6 @@ fun ProductDetailScreen(
                     }
 
                     item {
-
                         Text(
                             text = "Jumlah Barang",
                             fontWeight = FontWeight.Bold,
@@ -387,14 +425,14 @@ fun ProductDetailScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-
                             OutlinedButton(
                                 onClick = {
-                                    if (quantity > 0) quantity--
+                                    if (quantity > 0) {
+                                        quantity--
+                                        showQuantityError = false  // ← reset error saat dikurangi
+                                    }
                                 }
-                            ) {
-                                Text("-")
-                            }
+                            ) { Text("-") }
 
                             Text(
                                 text = quantity.toString(),
@@ -405,10 +443,20 @@ fun ProductDetailScreen(
                             OutlinedButton(
                                 onClick = {
                                     quantity++
+                                    showQuantityError = false  // ← reset error saat ditambah
                                 }
-                            ) {
-                                Text("+")
-                            }
+                            ) { Text("+") }
+                        }
+
+                        // Pesan error quantity
+                        if (showQuantityError) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Masukkan jumlah barang terlebih dahulu",
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -426,17 +474,10 @@ fun ProductDetailScreen(
 
                             Button(
                                 onClick = {
-
                                     if (quantity == 0) {
-
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                "Masukkan jumlah barang"
-                                            )
-                                        }
-
+                                        showQuantityError = true   // ← tampilkan error
                                     } else {
-
+                                        showQuantityError = false
                                         viewModel.placeOrder(quantity)
                                     }
                                 },
@@ -445,21 +486,17 @@ fun ProductDetailScreen(
                                     .height(52.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = GreenDark
+                                    containerColor = if (quantity == 0) Color(0xFFB0B0B0) else GreenDark  // ← abu-abu kalau 0
                                 ),
                                 enabled = !uiState.isOrdering
                             ) {
-
                                 if (uiState.isOrdering) {
-
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(20.dp),
                                         color = Color.White,
                                         strokeWidth = 2.dp
                                     )
-
                                 } else {
-
                                     Text(
                                         text = "Beli Sekarang",
                                         fontSize = 15.sp,

@@ -30,6 +30,8 @@ import com.example.lokamart.ui.components.BottomBar.LokaMartHeaderWithBack
 import com.example.lokamart.ui.navigation.Screen
 import com.example.lokamart.ui.screen.auth.GreenDark
 import com.example.lokamart.ui.viewmodel.ManageProductsViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 private val RedLight = Color(0xFFFFEBEE)
 private val RedDark = Color(0xFFD32F2F)
@@ -44,8 +46,21 @@ fun ManageProductScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow
+        .collectAsStateWithLifecycle()
 
-    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF5F5F5))) {
+    LaunchedEffect(lifecycleState) {
+        if (lifecycleState == Lifecycle.State.RESUMED) {
+            viewModel.loadMyProducts()
+        }
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+            .statusBarsPadding()
+    ) {
 
         Surface(color = Color.White, shadowElevation = 2.dp) {
             LokaMartHeaderWithBack(onBack = { navController.navigateUp() })

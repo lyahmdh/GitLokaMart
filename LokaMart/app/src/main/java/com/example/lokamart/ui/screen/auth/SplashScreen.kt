@@ -25,6 +25,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.ui.unit.Dp
 
 // ── Warna LokaMart ────────────────────────────────────────────
 val GreenDark = Color(0xFF1A3A2A)
@@ -74,6 +75,19 @@ val onboardingPages = listOf(
         badgeSubLabel = "Memberdayakan 1000+ UMKM Lokal"
     )
 )
+
+@Composable
+fun LokaMartLogo(size: Dp = 82.dp) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(RoundedCornerShape(20.dp))
+            .background(GreenDark),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "🏪", fontSize = (size.value * 0.44f).sp)
+    }
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -169,15 +183,7 @@ fun SplashPage(onStart: () -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             // Icon toko
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "🏪", fontSize = 36.sp)
-            }
+            LokaMartLogo(size = 80.dp)
 
             Spacer(modifier = Modifier.height(24.dp))
 
