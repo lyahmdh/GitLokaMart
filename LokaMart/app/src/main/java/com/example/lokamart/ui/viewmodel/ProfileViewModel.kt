@@ -18,8 +18,7 @@ data class ProfileUiState(
     val isEditingPhone: Boolean = false,
     val editNameValue: String = "",
     val editPhoneValue: String = "",
-    val isSaving: Boolean = false,
-    val logoutSuccess: Boolean = false
+    val isSaving: Boolean = false
 )
 
 class ProfileViewModel : ViewModel() {
@@ -35,32 +34,23 @@ class ProfileViewModel : ViewModel() {
 
     fun loadProfile() {
         val user = repository.getCurrentUser()
-
-        // Cek apakah user null
         android.util.Log.d("ProfileVM", "currentUser = $user")
-
         if (user == null) return
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             repository.getProfile(user.id).fold(
                 onSuccess = { profile ->
-                    android.util.Log.d("ProfileVM", "profile = $profile")
                     _uiState.update { it.copy(isLoading = false, profile = profile) }
                 },
                 onFailure = { e ->
-                    android.util.Log.e("ProfileVM", "error = ${e.message}")
                     _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
                 }
             )
         }
     }
 
-    // ── Edit Name ─────────────────────────────────────────────
     fun startEditName() {
-        _uiState.update {
-            it.copy(isEditingName = true, editNameValue = it.profile?.name ?: "")
-        }
+        _uiState.update { it.copy(isEditingName = true, editNameValue = it.profile?.name ?: "") }
     }
 
     fun onNameChange(value: String) = _uiState.update { it.copy(editNameValue = value) }
@@ -88,11 +78,8 @@ class ProfileViewModel : ViewModel() {
 
     fun cancelEditName() = _uiState.update { it.copy(isEditingName = false) }
 
-    // ── Edit Phone ────────────────────────────────────────────
     fun startEditPhone() {
-        _uiState.update {
-            it.copy(isEditingPhone = true, editPhoneValue = it.profile?.phone ?: "")
-        }
+        _uiState.update { it.copy(isEditingPhone = true, editPhoneValue = it.profile?.phone ?: "") }
     }
 
     fun onPhoneChange(value: String) = _uiState.update { it.copy(editPhoneValue = value) }
@@ -119,16 +106,6 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun cancelEditPhone() = _uiState.update { it.copy(isEditingPhone = false) }
-
-
-
-    // ── Logout ────────────────────────────────────────────────
-    fun logout() {
-        viewModelScope.launch {
-            repository.logout()
-            _uiState.update { it.copy(logoutSuccess = true) }
-        }
-    }
 
     fun clearError() = _uiState.update { it.copy(errorMessage = null) }
 }
