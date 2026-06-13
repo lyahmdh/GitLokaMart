@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.lokamart.ui.viewmodel.AuthViewModel
+import com.example.lokamart.ui.viewmodel.ManageProductsViewModel
 import com.example.lokamart.ui.screen.auth.LoginScreen
 import com.example.lokamart.ui.screen.auth.RegisterScreen
 import com.example.lokamart.ui.screen.auth.SplashScreen
@@ -22,7 +23,11 @@ import com.example.lokamart.ui.screen.home.HomeScreen
 import com.example.lokamart.ui.screen.favorite.FavoriteScreen
 import com.example.lokamart.ui.screen.order.OrderHistoryScreen
 import com.example.lokamart.ui.screen.profile.ProfileScreen
+import com.example.lokamart.ui.screen.product.ProductDetailScreen
 
+import com.example.lokamart.ui.screen.product.ManageProductScreen
+import com.example.lokamart.ui.screen.product.CreateProductScreen
+import com.example.lokamart.ui.screen.product.EditProductScreen
 
 @Composable
 fun LokaMartNavGraph(
@@ -32,7 +37,6 @@ fun LokaMartNavGraph(
 ) {
     val uiState by authViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Tunggu sampai auth state siap
     if (uiState.isLoading) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -44,7 +48,7 @@ fun LokaMartNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = startDestination, // ← pakai variabel, bukan hardcode
+        startDestination = startDestination,
         modifier = modifier
     ) {
 
@@ -75,9 +79,7 @@ fun LokaMartNavGraph(
         composable(Screen.Register.route) {
             RegisterScreen(
                 viewModel = authViewModel,
-                onNavigateToLogin = {
-                    navController.navigateUp()
-                },
+                onNavigateToLogin = { navController.navigateUp() },
                 onRegisterSuccess = {
                     navController.navigate(Screen.OtpVerification.route)
                 }
@@ -89,24 +91,23 @@ fun LokaMartNavGraph(
                 viewModel = authViewModel,
                 onVerificationSuccess = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Register.route) {
-                            inclusive = true
-                        }
+                        popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 },
-
                 onBackToLogin = {
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Register.route) {
-                            inclusive = true
-                        }
+                        popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 }
             )
         }
 
         composable(Screen.Home.route) {
-            HomeScreen()
+            HomeScreen(
+                onProductClick = { productId ->
+                    navController.navigate(Screen.ProductDetail.createRoute(productId))
+                }
+            )
         }
 
         composable(Screen.Favorite.route) {
@@ -118,28 +119,54 @@ fun LokaMartNavGraph(
         }
 
         composable(Screen.Profile.route) {
-            ProfileScreen()
+            ProfileScreen(
+                onNavigateToManageProducts = {
+                    navController.navigate(Screen.ManageProducts.route)
+                },
+                onLogout = {
+                    authViewModel.logout()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
-//
+
+        composable(Screen.ManageProducts.route) {
+            val manageVM: ManageProductsViewModel = viewModel()
+            ManageProductScreen(navController = navController, viewModel = manageVM)
+        }
+
+        composable(Screen.CreateProduct.route) {
+            CreateProductScreen(navController = navController)
+        }
+
+        composable(route = Screen.EditProduct.route) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
+            EditProductScreen(
+                productId = productId,
+                navController = navController
+            )
+        }
+
+        composable(
+            route = Screen.ProductDetail.route
+        ) { backStackEntry ->
+            val productId =
+                backStackEntry.arguments?.getString("productId") ?: ""
+
+            ProductDetailScreen(
+                productId = productId,
+                navController = navController
+            )
+        }
+
 //        composable(Screen.ManageProducts.route) {
 //            ManageProductScreen(navController)
 //        }
 //
 //        composable(Screen.CreateProduct.route) {
 //            CreateProductScreen(navController)
-//        }
-//
-//        composable(
-//            route = Screen.ProductDetail.route
-//        ) { backStackEntry ->
-//
-//            val productId =
-//                backStackEntry.arguments?.getString("productId") ?: ""
-//
-//            ProductDetailScreen(
-//                productId = productId,
-//                navController = navController
-//            )
 //        }
 //
 //        composable(

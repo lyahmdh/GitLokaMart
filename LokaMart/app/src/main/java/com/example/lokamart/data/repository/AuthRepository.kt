@@ -116,6 +116,18 @@ class AuthRepository {
         }
     }
 
+    suspend fun updateProfileLocation(userId: String, location: String): Result<Unit> {
+        return try {
+            client.postgrest["profiles"]
+                .update({ set("location", location) }) {
+                    filter { eq("id", userId) }
+                }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // ── Mapping error Supabase ke pesan bahasa Indonesia ─────
     private fun mapAuthError(e: Exception): Exception {
         val msg = e.message?.lowercase() ?: ""

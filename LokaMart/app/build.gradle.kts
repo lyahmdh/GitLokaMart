@@ -7,6 +7,7 @@ plugins {
 android {
     namespace = "com.example.lokamart"
     compileSdk = 36
+    buildToolsVersion = "34.0.0"
     defaultConfig {
         applicationId = "com.example.lokamart"
         minSdk = 24

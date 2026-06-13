@@ -9,6 +9,7 @@ data class Profile(
     val name: String = "",
     val email: String = "",
     val phone: String = "",
+    val location: String? = null,
     @SerialName("avatar_url")
     val avatarUrl: String? = null,
     @SerialName("created_at")

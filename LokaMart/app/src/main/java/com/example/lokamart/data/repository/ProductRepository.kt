@@ -4,16 +4,18 @@ import android.util.Log
 import com.example.lokamart.data.model.Product
 import com.example.lokamart.data.remote.SupabaseClient.client
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.storage.storage
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import java.util.UUID
 
 class ProductRepository {
 
     suspend fun getProducts(): Result<List<Product>> {
         return try {
-
             val products = client
-                .postgrest["products"]
+                .from("products")
                 .select(
                     columns = Columns.raw(
                         """
@@ -23,33 +25,29 @@ class ProductRepository {
                     )
                 )
                 .decodeList<Product>()
-
-            Log.d(
-                "ProductRepository",
-                "Products loaded: ${products.size}"
-            )
-
+            Log.d("ProductRepository", "Products loaded: ${products.size}")
             Result.success(products)
-
         } catch (e: Exception) {
-
-            Log.e(
-                "ProductRepository",
-                "Error: ${e.message}",
-                e
-            )
-
+            Log.e("ProductRepository", "Error: ${e.message}", e)
             Result.failure(e)
         }
     }
 
+    // ── FIX: tambah product_images(*) agar foto ikut ter-load ──
     suspend fun getProductById(
         productId: String
     ): Result<Product> {
         return runCatching {
             client
                 .from("products")
-                .select {
+                .select(
+                    columns = Columns.raw(
+                        """
+                        *,
+                        product_images(*)
+                        """.trimIndent()
+                    )
+                ) {
                     filter {
                         eq("id", productId)
                     }
@@ -58,60 +56,130 @@ class ProductRepository {
         }
     }
 
-    suspend fun getMyProducts(
-        userId: String
-    ): Result<List<Product>> {
+    suspend fun getMyProducts(userId: String): Result<List<Product>> {
         return runCatching {
             client
                 .from("products")
-                .select {
-                    filter {
-                        eq("user_id", userId)
-                    }
+                .select(
+                    columns = Columns.raw(
+                        """
+                        *,
+                        product_images(*)
+                        """.trimIndent()
+                    )
+                ) {
+                    filter { eq("user_id", userId) }
                 }
                 .decodeList<Product>()
         }
     }
 
-    suspend fun createProduct(
-        product: Product
-    ): Result<Unit> {
+    suspend fun createProduct(product: Product): Result<Product> {
         return runCatching {
-            client
-                .from("products")
-                .insert(product)
-        }
-    }
-
-    suspend fun updateProduct(
-        product: Product
-    ): Result<Unit> {
-        return runCatching {
-            client
-                .from("products")
-                .update(product) {
-                    filter {
-                        eq("id", product.id)
-                    }
+            val response = client.from("products")
+                .insert(product) {
+                    select()
                 }
+            response.decodeSingle<Product>()
         }
     }
 
-    suspend fun archiveProduct(
-        productId: String
-    ): Result<Unit> {
+    suspend fun uploadProductImage(bytes: ByteArray, fileExtension: String = "jpg"): Result<String> {
+        return runCatching {
+            val fileName = "${UUID.randomUUID()}.$fileExtension"
+            val bucket = client.storage["product-images"]
+            bucket.upload(fileName, bytes)
+            bucket.publicUrl(fileName)
+        }
+    }
+
+    suspend fun insertProductImage(productId: String, imageUrl: String, isThumbnail: Boolean = false, sortOrder: Int = 0): Result<Unit> {
+        return runCatching {
+            client.from("product_images").insert(
+                buildJsonObject {
+                    put("product_id", productId)
+                    put("image_url", imageUrl)
+                    put("is_thumbnail", isThumbnail)
+                    put("sort_order", sortOrder)
+                }
+            )
+        }
+    }
+
+    suspend fun deleteProductImageById(imageId: String): Result<Unit> {
+        return runCatching {
+            client.from("product_images").delete {
+                filter { eq("id", imageId) }
+            }
+        }
+    }
+
+    suspend fun deleteAllProductImages(productId: String): Result<Unit> {
+        return runCatching {
+            client.from("product_images").delete {
+                filter { eq("product_id", productId) }
+            }
+        }
+    }
+
+    suspend fun deleteImageFromStorage(imageUrl: String): Result<Unit> {
+        return runCatching {
+            val bucket = client.storage["product-images"]
+            val fileName = imageUrl.substringAfterLast("/")
+            bucket.delete(listOf(fileName))
+        }
+    }
+
+    suspend fun updateProduct(product: Product): Result<Unit> {
         return runCatching {
             client
                 .from("products")
                 .update(
-                    mapOf(
-                        "is_archived" to true
-                    )
-                ) {
-                    filter {
-                        eq("id", productId)
+                    buildJsonObject {
+                        put("name", product.name)
+                        put("category", product.category)
+                        put("price", product.price)
+                        put("description", product.description)
+                        put("stock", product.stock)
                     }
+                ) {
+                    filter { eq("id", product.id) }
                 }
+        }
+    }
+
+    suspend fun archiveProduct(productId: String): Result<Unit> {
+        return runCatching {
+            client
+                .from("products")
+                .update(
+                    buildJsonObject {
+                        put("is_archived", true)
+                    }
+                ) {
+                    filter { eq("id", productId) }
+                }
+        }
+    }
+
+    suspend fun unarchiveProduct(productId: String): Result<Unit> {
+        return runCatching {
+            client
+                .from("products")
+                .update(
+                    buildJsonObject {
+                        put("is_archived", false)
+                    }
+                ) {
+                    filter { eq("id", productId) }
+                }
+        }
+    }
+    suspend fun deleteProduct(productId: String): Result<Unit> {
+        return runCatching {
+            client.from("products").delete {
+                filter { eq("id", productId) }
+            }
         }
     }
 }

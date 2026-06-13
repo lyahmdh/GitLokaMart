@@ -49,7 +49,10 @@ fun MainScreen(
 
         LokaMartNavGraph(
             navController = navController,
-            modifier = Modifier.padding(padding)
+            modifier = if (currentRoute in bottomRoutes)
+                Modifier.padding(padding)
+            else
+                Modifier
         )
     }
 }

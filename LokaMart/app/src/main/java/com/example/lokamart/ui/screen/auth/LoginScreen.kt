@@ -59,20 +59,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(56.dp))
 
             // LOGO
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                )
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(82.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("LOGO")
-                }
-            }
+            LokaMartLogo()
 
             Spacer(modifier = Modifier.height(24.dp))
 

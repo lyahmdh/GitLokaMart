@@ -89,23 +89,7 @@ fun RegisterScreen(
             }
 
             item {
-
-                Card(
-                    shape = RoundedCornerShape(22.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.White
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier.size(86.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "LOGO",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
+                LokaMartLogo(size = 86.dp)
             }
 
             item {
